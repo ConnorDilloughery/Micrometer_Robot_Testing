@@ -15,9 +15,12 @@ import openpyxl
 def main():
     state = 0
     init_count = 0
-    reading1_list = []                              # List of values used to store measurement values for sensor 1
-    reading2_list = []                              # List of values used to store measurement values for sensor 2
+    reading1_list1 = []                              # List of values used to store measurement values for sensor 1
+    reading2_list1 = []                              # List of values used to store measurement values for sensor 2
+    reading1_list2 = []
+    reading2_list2 = []
     raised_flag1 = 0                                # Flag used to see if measurement value is ready to be taken
+    raised_flag2 = 0
 
 
     while True:
@@ -89,32 +92,49 @@ def main():
             if reading1_avg != 0 and reading2_avg != 0:             # Checks if both sensors have been activated
                 if raised_flag1 == 1:                               # Checks if readt flag has been raised
                     state = 3                                      
-                else: 
-                    state = 2                                       # Goes to this state to raise a flag
+                elif raised_flag2 == 1: 
+                    state = 4                                       # Goes to this state to raise a flag
+                else:
+                    state = 2
 
 
         elif state == 2:
             # State 2: Raise flag
-            time.sleep(1)                                           # Halts program for 1 second. Used to wait for the end effector to minimize vibrations 
+            time.sleep(2)                                           # Halts program for 2 second. Used to wait for the end effector to minimize vibrations 
             raised_flag1 = 1                                        # Raises proceed 
             state = 1                                               # Assigns state = 1 to take another measurement
 
-        elif state == 3:     
-            # State 3: Add values to list
+        elif state == 3: 
+            raised_flag1 = 0 
+            raised_flag2 = 1
+            print('adding to 1')
+            reading1_list1.append(reading1_avg)
+            reading2_list1.append(reading2_avg)
+            print("Pic 1 -   1: ", reading1_avg, "              2: ",reading2_avg)        # Provides update of measurment values onto the output screen
+            time.sleep(0.5)                               #################################### CHANGE BACK TO 5
+            state = 1
+
+
+        elif state == 4:     
+            # State 4: Add values to list
             raised_flag1 = 0                                        # Resets the flag
-            reading1_list.append(reading1_avg)                      # Adds measurement values from sensor 1 to the list
-            reading2_list.append(reading2_avg)                      # Adds measurement values from sensor 2 to the list
-            print("1: ", reading1_avg, "              2: ",reading2_avg)        # Provides update of measurment values onto the output screen
-            time.sleep(5)                                           # Paues screening for 5 seconds to prevent cluster of zero values on the screen
-            print('Cycle(s): ', len(reading1_list))                               # Used to show what cycle we are on
-            if len(reading1_list) == 1000:                          # Desired number of cycles used in data
-                workbook = openpyxl.Workbook()                      # Opens desired workbook
-                sheet = workbook.active                             # Used to activate excel sheet
+            raised_flag2 = 0
+            print('adding to 2')
+            reading1_list2.append(reading1_avg)                      # Adds measurement values from sensor 1 to the list
+            reading2_list2.append(reading2_avg)                      # Adds measurement values from sensor 2 to the list
+            print("Pic 2 -   1: ", reading1_avg, "              2: ",reading2_avg)        # Provides update of measurment values onto the output screen
+            time.sleep(3)                                     ######CHANGE BACK       # Paues screening for 5 seconds to prevent cluster of zero values on the screen
+            print('Cycle(s): ', len(reading1_list2))                 # Used to show what cycle we are on
+            if len(reading1_list2) == 500:                          # Desired number of cycles used in data
+                workbook = openpyxl.Workbook()                       # Opens desired workbook
+                sheet = workbook.active                              # Used to activate excel sheet
 
                 # Add data to the worksheet
-                for row_idx, (value1, value2) in enumerate(zip(reading1_list, reading2_list), start=1):
+                for row_idx, (value1, value2, value3, value4) in enumerate(zip(reading1_list1, reading2_list1, reading1_list2, reading2_list2), start=1):
                     sheet.cell(row=row_idx, column=2, value=value1)                     # Uploads reading 1 values
                     sheet.cell(row=row_idx, column=3, value=value2)                     # Uploads reading 2 values
+                    sheet.cell(row=row_idx, column=4, value=value3)
+                    sheet.cell(row=row_idx, column=5, value=value4)
 
                 # Specify the Excel file path
                 excel_file_path = 'Robot_Laser_Measurement.xlsx'                        # Desired excel file path 
